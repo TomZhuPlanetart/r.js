@@ -65,7 +65,27 @@ function readAndNameModule(fileName) {
 //Load up all the optimizer files.
 libFiles.forEach(function (fileName) {
     if (fileName.indexOf('env!') === 0) {
+        /**
+         *  For "env!env/args", create:
+         * 
+         *  if (env === 'browser') {
+         *    // contents of build/jslib/browser/args.js
+         *  }
+         * 
+         *  if (env === 'node') {
+         *     // contents of build/jslib/node/args.js
+         *  }
+         * 
+         *  if (env === 'rhino') {
+         *    // contents of build/jslib/rhino/args.js
+         *  }
+         * 
+         *  if (env === 'xpconnect') {
+         *    // contents of build/jslib/xpconnect/args.js
+         *  }
+         */        
         envs.forEach(function (env) {
+
             libText += "\nif(env === '" + env + "') {\n" +
                         readAndNameModule(fileName.replace(/env!env\//, 'build/jslib/' + env + '/') + '.js') +
                         "\n}\n";

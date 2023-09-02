@@ -27,6 +27,7 @@ var requirejs, require, define;
         //to feature test w/o causing perf issues.
         readyRegExp = isBrowser && navigator.platform === 'PLAYSTATION 3' ?
                       /^complete$/ : /^(complete|loaded)$/,
+        // 为啥这里是一个"_" ? 
         defContextName = '_',
         //Oh the tragedy, detecting opera. See the usage of isOpera for reason.
         isOpera = typeof opera !== 'undefined' && opera.toString() === '[object Opera]',
@@ -79,6 +80,7 @@ var requirejs, require, define;
     }
 
     function hasProp(obj, prop) {
+        // = obj.hasOwnProperty(prop)
         return hasOwn.call(obj, prop);
     }
 
@@ -196,6 +198,7 @@ var requirejs, require, define;
         require = undefined;
     }
 
+    // 创建一个新的上下文
     function newContext(contextName) {
         var inCheckLoaded, Module, context, handlers,
             checkLoadedTimeoutId,
@@ -428,12 +431,16 @@ var requirejs, require, define;
                 name = '_@r' + (requireCounter += 1);
             }
 
+            // 始终返回一个包含两个元素的数组. 用于拆分类似于 "plugin!resource" 的字符串
+            // 第一个是前缀，第二个是模块名
+            // 如果没有前缀，那么第一个元素是null
             nameParts = splitPrefix(name);
             prefix = nameParts[0];
             name = nameParts[1];
 
             if (prefix) {
                 prefix = normalize(prefix, parentName, applyMap);
+                // 从defined里面获取到这个模块, 插件也是一个模块
                 pluginModule = getOwn(defined, prefix);
             }
 
@@ -471,6 +478,7 @@ var requirejs, require, define;
                     normalizedName = nameParts[1];
                     isNormalized = true;
 
+                    // 将名字转换成url
                     url = context.nameToUrl(normalizedName);
                 }
             }
@@ -552,17 +560,25 @@ var requirejs, require, define;
         }
 
         /**
+         * 把全局的defQueue放到上下文的defQueue中
+         * 
          * Internal method to transfer globalQueue items to this context's
          * defQueue.
          */
         function takeGlobalQueue() {
             //Push all the globalDefQueue items into the context's defQueue
+            // globalDefQueue 是一个全局的队列
             if (globalDefQueue.length) {
+
+                // 把全局的defQueue放到上下文的defQueue中
+                // 
                 each(globalDefQueue, function(queueItem) {
                     var id = queueItem[0];
                     if (typeof id === 'string') {
                         context.defQueueMap[id] = true;
                     }
+
+                    // defQueue是上下文中的一个队列
                     defQueue.push(queueItem);
                 });
                 globalDefQueue = [];
@@ -1409,6 +1425,9 @@ var requirejs, require, define;
                         callback.__requireJsBuild = true;
                     }
 
+                    // 应该是这种情况
+                    // var a = require("a"); 
+                    // 这时依赖的模块应该已经就绪了， 同步返回. 
                     if (typeof deps === 'string') {
                         if (isFunction(callback)) {
                             //Invalid call
@@ -1439,6 +1458,8 @@ var requirejs, require, define;
                                         contextName +
                                         (relMap ? '' : '. Use require([])')));
                         }
+
+                        // defined是context内的一个对象， 里面存放了所有已经加载的模块
                         return defined[id];
                     }
 
@@ -1750,9 +1771,12 @@ var requirejs, require, define;
     /**
      * Main entry point.
      *
+     * 如果只有一个string类型的参数，加载这个参数对应的模块
+     * 
      * If the only argument to require is a string, then the module that
      * is represented by that string is fetched for the appropriate context.
      *
+     * 如果第一个参数是一个数组，那么它会被当做一组依赖的模块名，可选的回调函数可以在这些依赖都被加载完毕后执行
      * If the first argument is an array, then it will be treated as an array
      * of dependency string names to fetch. An optional function callback can
      * be specified to execute when all of those dependencies are available.
@@ -1767,11 +1791,13 @@ var requirejs, require, define;
         var context, config,
             contextName = defContextName;
 
+        // 如果第一个参数即不是数组也不是string，那么它是一个配置对象，用来配置requirejs
         // Determine if have config object in the call.
         if (!isArray(deps) && typeof deps !== 'string') {
             // deps is a config object
             config = deps;
             if (isArray(callback)) {
+                // 相当于把后面的参数往前移动一位
                 // Adjust args if there are dependencies
                 deps = callback;
                 callback = errback;
@@ -1781,10 +1807,13 @@ var requirejs, require, define;
             }
         }
 
+        // config.context是一个可选的参数，用来指定上下文的名字
         if (config && config.context) {
             contextName = config.context;
         }
 
+        // contexts是一个全局对象
+        // 先从全局对象中找到对应的上下文，如果没有就创建一个新的上下文
         context = getOwn(contexts, contextName);
         if (!context) {
             context = contexts[contextName] = req.s.newContext(contextName);
@@ -1794,6 +1823,7 @@ var requirejs, require, define;
             context.configure(config);
         }
 
+        // 这里deps有可能是空的? 
         return context.require(deps, callback, errback);
     };
 
@@ -1819,6 +1849,7 @@ var requirejs, require, define;
      * Export require as a global, but only if it does not already exist.
      */
     if (!require) {
+        // require 就是 req
         require = req;
     }
 
