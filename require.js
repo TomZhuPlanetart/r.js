@@ -1652,13 +1652,14 @@ var requirejs, require, define;
                     moduleName = pkgMain;
                 }
 
+                // 如果在bundlesMap中找到了对应的bundleId，那么直接返回bundleId对应的url
                 bundleId = getOwn(bundlesMap, moduleName);
 
                 if (bundleId) {
                     return context.nameToUrl(bundleId, ext, skipExt);
                 }
 
-                //If a colon is in the URL, it indicates a protocol is used and it is just
+                //If a colon(":") is in the URL, it indicates a protocol is used and it is just
                 //an URL to a file, or if it starts with a slash, contains a query arg (i.e. ?)
                 //or ends with .js, then assume the user meant to use an url and not a module id.
                 //The slash is important for protocol-less URLs as well as full paths.
